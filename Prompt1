@@ -1,0 +1,32 @@
+Veuillez lire le document ci-dessus et extraire uniquement les informations suivantes. Formatez les réponses clairement pour chaque élément :
+
+**Document :**
+{Document}
+
+---
+
+**Informations demandées :**
+Extraire tous les noms des verres dans le document:
+
+
+1. verre_1 : [Nom clair, sans texte additionnel]
+2. verre_2 : [Nom clair, sans texte additionnel]
+3. verre_3 : [Nom clair, sans texte additionnel]
+4. verre_4 : [Nom clair, sans texte additionnel]
+5. verre_5 : [Nom clair, sans texte additionnel]
+...
+---
+
+**Format attendu :**
+
+
+1. verre_1 : [Nom]
+2. verre_2 : [Nom]
+3. verre_3 : [Nom]
+4. verre_4 : [Nom]
+5. verre_5 : [Nom]
+...
+n. verre_n : [Nom]
+---
+
+Si une des informations est indisponible dans le document, indiquez "Non disponible".
