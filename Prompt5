@@ -1,0 +1,192 @@
+
+TableExcell
+Docling_Langflow_flask_subtasks_difprompt
+Saved
+Components
+Search
+/
+
+Saved
+Inputs
+Outputs
+Prompts
+Data
+Processing
+Models
+Vector Stores
+Embeddings
+Agents
+Memories
+Tools
+Logic
+Helpers
+
+Bundles
+
+LangChain
+AssemblyAI
+DataStax
+Notion
+Google
+CrewAI
+NotDiamond
+Composio
+Firecrawl
+Unstructured
+Git
+Confluence
+
+Discover more components
+Playground
+API
+Edit Prompt
+
+Create your prompt. Prompts can help guide the behavior of a Language Model. Use curly brackets {} to introduce variables.
+**Instructions :**
+
+Lisez le document ci-dessous et l'input donné par l'utilisateur et extrayez les informations suivantes pour les types de verre de 9 à 12 dans la liste des noms donnés par l'utilisateur dans l'input et qui sont dans le document. Formatez les réponses clairement pour chaque type de verre.
+
+L'utilisateur va vous donner une liste des noms des verres comme cela :
+1. verre_1 :
+2. verre_2 :
+3. verre_3 :
+4. verre_4 :
+5. verre_5 :
+6. verre_6 :
+7. verre_7 :
+8. verre_8 :
+...
+et vous devez chercher seulement les types de verre 9 à 12 dans le document.
+
+**Document :**
+{Document}
+
+---
+
+**Informations demandées :**
+
+Pour les types de verre de 9 à 12 dans la liste des noms donnés par l'utilisateur, extrayez les informations suivantes :
+
+406. **Verre_type** : [Description ou identifiant du type de verre]
+407. **SiO₂** : [Valeur numérique]
+408. **B₂O₃** : [Valeur numérique]
+409. **Na₂O** : [Valeur numérique]
+410. **Al₂O₃** : [Valeur numérique]
+411. **CaO** : [Valeur numérique]
+412. **ZrO₂** : [Valeur numérique]
+413. **Ce₂O₃** : [Valeur numérique]
+414. **Li₂O** : [Valeur numérique]
+415. **Fe₂O₃** : [Valeur numérique]
+416. **ZnO** : [Valeur numérique]
+417. **P₂O₅** : [Valeur numérique]
+418. **MoO₃** : [Valeur numérique]
+419. **TiO₂** : [Valeur numérique]
+420. **MgO** : [Valeur numérique]
+421. **Fines** : [Valeur numérique]
+422. **Autres** : [Valeur numérique, si des autres éléments sont cités mais qui ne sont pas dans les éléments que je vous ai demandés, calculez leur somme et mettez-la ici]
+423. **Somme** : [Valeur numérique, calculez la somme des valeurs des compositions ci-dessus]
+424. **Densité** : [Valeur numérique]
+425. **Homogénéité** : [Commentaire]
+426. **% B(IV)** : [Valeur numérique, fraction ou pourcentage de bore tétracoordiné dans le verre]
+427. **Irradié** : [O/N, Est-ce que le verre dont on étudie la vitesse initiale a été pré-irradié?]
+428. **Caractéristiques si irradié** : [Commentaire, Si la réponse à la question de la colonne de gauche est oui, quelles sont les caractéristiques de l'irradiation : électrons, quels ions lourds (heavy ions or swift ions), quelle énergie, quelle fluence ?]
+429. **Température** : [Valeur numérique]
+430. **Statique/dynamique** : [Commentaire, Statique = la solution d'altération n'est pas renouvelée. Dynamique : la solution d'altération est renouvelée.]
+431. **Plage granulométrique (si poudre)** : [Valeur numérique, termes qui peuvent être employés : mesh, mesh size, particles size fraction...]
+432. **Surface spécifique géométrique (si poudre)** : [Valeur numérique, termes qui peuvent être employés : geometric surface area]
+433. **Surface spécifique BET (si poudre)** : [Valeur numérique, termes qui peuvent être employés : ici BET doit être employé]
+434. **Qualité de polissage (si monolithe)** : [Commentaire, termes qui peuvent être employés : polishing grade]
+435. **Masse du verre** : [Valeur numérique, ici on cherche la masse de verre mise dans le réacteur]
+436. **Surface du verre (S)** : [Valeur numérique, ici on cherche la surface du verre mise dans le réacteur]
+437. **Volume de la solution (V)** : [Valeur numérique, ici on cherche le volume de solution dans le réacteur]
+438. **Débit de la solution** : [Valeur numérique, si le test est réalisé en dynamique, on cherche ici à avoir le débit de la solution. Les termes possibles sont renewal rate, flow rate]
+439. **pH initial (T amb)** : [Valeur numérique, Les termes possibles sont : onset pH, starting pH, pH of the leachate, pH of the solution… On cherche aussi à savoir si la valeur donnée est mesurée à température ambiante (cette case) ou si elle est mesurée à la température de l'expérience (case d'après)]
+440. **pH initial (T essai)** : [Valeur numérique]
+441. **Composition de la solution** : [Commentaire, On cherche ici à connaître la composition chimique de la solution d'altération.]
+442. **Durée de l'expérience** : [Valeur numérique, L'unité ne sera pas forcément en jours]
+443. **pH final (T amb)** : [Valeur numérique, Idem que pour les pH final]
+444. **pH final (T essai)** : [Valeur numérique]
+445. **Normalisation de la vitesse (Sgeo ou SBET)** : [Valeur numérique, Là on cherche à savoir si la vitesse initiale est calculée à partir de la surface géométrique ou surface BET]
+446. **V₀(Si) ou r₀(Si)** : [Valeur numérique, Là on la vitesse initiale (initial dissolution rate, forward rate) déterminée à partir du Si mesuré en solution. L'unité peut être g.m-2.d-1 ou µm.d-1 (en gros tout ce qui est commensurable à une épaisseur par unité de temps. En fonction de l'unité utilisé, il faudra faire la conversion)]
+447. **r²(Si)** : [Valeur numérique, termes possibles : linear regression coefficient, regression coefficient]
+448. **Ordonnée à l'origine (Si)** : [Valeur numérique, termes qui peuvent être employés : y-intercept ...]
+449. **V₀(B) ou r₀(B)** : [Valeur numérique, Idem pour B]
+450. **Ordonnée à l'origine (B)** : [Valeur numérique, termes qui peuvent être employés : y-intercept ...]
+451. **V₀(Na) ou r₀(Na)** : [Valeur numérique]
+452. **r²(Na)** : [Valeur numérique]
+453. **Ordonnée à l'origine (Na)** : [Valeur numérique, termes qui peuvent être employés : y-intercept ...]
+454. **V₀(ΔM) ou r₀(ΔM)** : [Valeur numérique]
+455. **Congruence** : [Commentaire, parfois dans la congruence elle peut être exprimée en valeur numérique et il peut être aussi en anglais "Congruency (Na/Si)", donc il faut citer cette valeur, comme par exemple 1.1±0.1, donc il faut mentionner la valeur dans le tableau telle qu'elle est]
+
+---
+
+**Format attendu :**
+
+Pour chaque type de verre (Verre_type9 à Verre_type12), répétez les informations ci-dessus en incrémentant les numéros.
+
+406. Verre_type9 : [Type9]
+407. SiO₂(Verre_type9) : [Valeur]
+408. B₂O₃(Verre_type9) : [Valeur]
+409. Na₂O(Verre_type9) : [Valeur]
+410. Al₂O₃(Verre_type9) : [Valeur]
+411. CaO(Verre_type9) : [Valeur]
+412. ZrO₂(Verre_type9) : [Valeur]
+413. Ce₂O₃(Verre_type9) : [Valeur]
+414. Li₂O(Verre_type9) : [Valeur]
+415. Fe₂O₃(Verre_type9) : [Valeur]
+416. ZnO(Verre_type9) : [Valeur]
+417. P₂O₅(Verre_type9) : [Valeur]
+418. MoO₃(Verre_type9) : [Valeur]
+419. TiO₂(Verre_type9) : [Valeur]
+420. MgO(Verre_type9) : [Valeur]
+421. Fines(Verre_type9) : [Valeur]
+422. Autres(Verre_type9) : [Valeur]
+423. Somme(Verre_type9) : [Valeur]
+424. Densité(Verre_type9) : [Valeur]
+425. Homogénéité(Verre_type9) : [Commentaire]
+426. % B(IV)(Verre_type9) : [Valeur]
+427. Irradié(Verre_type9) : [O/N]
+428. Caractéristiques si irradié(Verre_type9) : [Commentaire]
+429. Température(Verre_type9) : [Valeur]
+430. Statique/dynamique(Verre_type9) : [Commentaire]
+431. Plage granulométrique (si poudre)(Verre_type9) : [Valeur]
+432. Surface spécifique géométrique (si poudre)(Verre_type9) : [Valeur]
+433. Surface spécifique BET (si poudre)(Verre_type9) : [Valeur]
+434. Qualité de polissage (si monolithe)(Verre_type9) : [Commentaire]
+435. Masse du verre(Verre_type9) : [Valeur]
+436. Surface du verre (S)(Verre_type9) : [Valeur]
+437. Volume de la solution (V)(Verre_type9) : [Valeur]
+438. Débit de la solution(Verre_type9) : [Valeur]
+439. pH initial (T amb)(Verre_type9) : [Valeur]
+440. pH initial (T essai)(Verre_type9) : [Valeur]
+441. Composition de la solution(Verre_type9) : [Commentaire]
+442. Durée de l'expérience(Verre_type9) : [Valeur]
+443. pH final (T amb)(Verre_type9) : [Valeur]
+444. pH final (T essai)(Verre_type9) : [Valeur]
+445. Normalisation de la vitesse (Sgeo ou SBET)(Verre_type9) : [Valeur]
+446. V₀(Si) ou r₀(Si)(Verre_type9) : [Valeur]
+447. r²(Si)(Verre_type9) : [Valeur]
+448. Ordonnée à l'origine (Si)(Verre_type9) : [Valeur]
+449. V₀(B) ou r₀(B)(Verre_type9) : [Valeur]
+450. Ordonnée à l'origine (B)(Verre_type9) : [Valeur]
+451. V₀(Na) ou r₀(Na)(Verre_type9) : [Valeur]
+452. r²(Na)(Verre_type9) : [Valeur]
+453. Ordonnée à l'origine (Na)(Verre_type9) : [Valeur]
+454. V₀(ΔM) ou r₀(ΔM)(Verre_type9) : [Valeur]
+455. Congruence(Verre_type9) : [Commentaire ou valeur numérique]
+
+456. Verre_type10 : [Type10]
+...
+505. Congruence(Verre_type10) : [Commentaire ou valeur numérique]
+
+506. Verre_type11 : [Type11]
+...
+555. Congruence(Verre_type11) : [Commentaire ou valeur numérique]
+
+556. Verre_type12 : [Type12]
+...
+605. Congruence(Verre_type12) : [Commentaire ou valeur numérique]
+
+Il faut absolument donner toutes les valeurs des 4 types de verres de 406 à 605, et il ne faut surtout pas ajouter de commentaire à la fin pour quoi que ce soit. Si une des informations est indisponible dans le document, indiquez "Non disponible".
+Prompt Variables:
+Prompt variables can be created with any chosen name inside curly brackets, e.g. {variable_name}
