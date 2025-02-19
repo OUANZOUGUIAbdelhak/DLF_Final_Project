@@ -1,0 +1,30 @@
+**Instructions :**
+
+Lisez le document ci-dessous et extrayez uniquement les informations suivantes. Formatez les réponses clairement pour chaque élément :
+
+**Document :**
+{Document}
+
+---
+
+**Informations demandées :**
+
+1. Type du document : [Type]
+2. Titre du document : [Titre]
+3. Référence : [Référence]
+4. Premier Auteur : [Nom complet]
+5. Nombre de types de verres : [Nombre total des types de verres mentionnés dans les tableaux]
+
+---
+
+**Format attendu :**
+
+1. Type du document : [Type]
+2. Titre du document : [Titre]
+3. Référence : [Référence]
+4. Premier Auteur : [Premier Auteur]
+5. Nombre de types de verres : [Nombre]
+
+---
+
+Si une information est indisponible, indiquez "Non disponible".
