@@ -6,7 +6,7 @@ Veuillez lire le document ci-dessus et extraire uniquement les informations suiv
 ---
 
 **Informations demandées :**
-Extraire tous les noms des verres dans le document:
+Extraire les noms officiels des verres dont on parle dans tout le document et dont la composition du verre est donnée dans le tableau et aussi les charactéristiques des expériences, n'extrait pas des noms secondaire qui ont pas des charactéristiques numériques dans le document:
 
 
 1. verre_1 : [Nom clair, sans texte additionnel]
@@ -29,4 +29,4 @@ Extraire tous les noms des verres dans le document:
 n. verre_n : [Nom]
 ---
 
-Si une des informations est indisponible dans le document, indiquez "Non disponible".
+N'extrait pas des noms secondaires qui ont pas des charactéristiques numériques dans le document,, et pas les noms altérnatives aussi, mais parfois le nom de verres peut être un chiffre, donc il faut l'extraire aussi tant que sa composition existe, et ne donner aucun commentaire supplimentaire à la fin et respicter la forme attendue de la réponse.
