@@ -1,355 +1,73 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file
-from flask_sqlalchemy import SQLAlchemy
-from flask_socketio import SocketIO, emit
-import os
-import subprocess
-import requests
-import pandas as pd
-from io import BytesIO
 import logging
+import time
+import sys
+from pathlib import Path
+from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import (
+    EasyOcrOptions,
+    OcrMacOptions,
+    PdfPipelineOptions,
+    RapidOcrOptions,
+    TesseractCliOcrOptions,
+    TesseractOcrOptions,
+)
+from docling_core.types.doc import ImageRefMode
+from docling.document_converter import DocumentConverter, PdfFormatOption
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///documents.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'uploads'
-socketio = SocketIO(app)
+def main(input_doc_path):
+    logging.basicConfig(level=logging.INFO)
 
-# Initialiser SQLAlchemy
-db = SQLAlchemy(app)
+    # Paths
+    input_doc_path = Path(input_doc_path)
+    output_dir = Path("scratch")
 
-# Modèle de base de données
-class GlassData(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    type_document = db.Column(db.String(100), nullable=True)
-    titre = db.Column(db.String(200), nullable=True)
-    reference = db.Column(db.String(200), nullable=True)
-    premier_auteur = db.Column(db.String(100), nullable=True)
-    nombre_types_verres = db.Column(db.Integer, nullable=True)
-    glass_types = db.relationship('GlassType', backref='glass_data', lazy=True, cascade='all, delete-orphan')
-class GlassType(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    glass_data_id = db.Column(db.Integer, db.ForeignKey('glass_data.id', ondelete='CASCADE'), nullable=False)
-    type_verre = db.Column(db.String(100), nullable=True)
-    sio2 = db.Column(db.String(100), nullable=True)
-    b2o3 = db.Column(db.String(100), nullable=True)
-    na2o = db.Column(db.String(100), nullable=True)
-    al2o3 = db.Column(db.String(100), nullable=True)
-    cao = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    zro2 = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    ce2o3 = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    lio2 = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    fe2o3 = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    zno = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    p2o5 = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    mo3 = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    tio2 = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    mgo = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    fines = db.Column(db.String(100), nullable=True)
-    autres = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    somme = db.Column(db.String(100), nullable=True)  # Nouveau champ
-    densite = db.Column(db.String(100), nullable=True)
-    homogeneite = db.Column(db.String(100), nullable=True)
-    b_iv_pourcent = db.Column(db.String(100), nullable=True)
-    irradie = db.Column(db.String(100), nullable=True)
-    caracteristiques_irradie = db.Column(db.String(100), nullable=True)
-    temperature = db.Column(db.String(100), nullable=True)
-    statique_dynamique = db.Column(db.String(100), nullable=True)
-    plage_granulo = db.Column(db.String(100), nullable=True)
-    surface_specifique_geometrique = db.Column(db.String(100), nullable=True)
-    surface_specifique_bet = db.Column(db.String(100), nullable=True)
-    qualite_polissage = db.Column(db.String(100), nullable=True)
-    masse_verre = db.Column(db.String(100), nullable=True)
-    s_verre = db.Column(db.String(100), nullable=True)
-    v_solution = db.Column(db.String(100), nullable=True)
-    debit_solution = db.Column(db.String(100), nullable=True)
-    ph_initial = db.Column(db.String(100), nullable=True)
-    ph_initial_test = db.Column(db.String(100), nullable=True)
-    composition_solution = db.Column(db.String(100), nullable=True)
-    duree_experience = db.Column(db.String(100), nullable=True)
-    ph_final_amb = db.Column(db.String(100), nullable=True)
-    ph_final_test = db.Column(db.String(100), nullable=True)
-    normalisation_vitesse = db.Column(db.String(100), nullable=True)
-    v0_si = db.Column(db.String(100), nullable=True)
-    r_carre_si = db.Column(db.String(100), nullable=True)
-    ordonnee_origine_si = db.Column(db.String(100), nullable=True)
-    v0_b = db.Column(db.String(100), nullable=True)
-    ordonnee_origine_b = db.Column(db.String(100), nullable=True)
-    v0_na = db.Column(db.String(100), nullable=True)
-    r_carre_na = db.Column(db.String(100), nullable=True)
-    ordonnee_origine_na = db.Column(db.String(100), nullable=True)
-    v0_dm = db.Column(db.String(100), nullable=True)
-    congruence = db.Column(db.String(100), nullable=True)
+    # Pipeline options - DISABLE IMAGE PROCESSING
+    pipeline_options = PdfPipelineOptions()
+    pipeline_options.do_ocr = True
+    pipeline_options.do_table_structure = True
+    pipeline_options.table_structure_options.do_cell_matching = True
+    pipeline_options.generate_page_images = False  # Disable page images
+    pipeline_options.generate_picture_images = False  # Disable picture images
 
-# Créer la base de données si elle n'existe pas
-with app.app_context():
-    db.create_all()
+    # OCR options
+    ocr_options = TesseractCliOcrOptions(force_full_page_ocr=True)
+    pipeline_options.ocr_options = ocr_options
 
-@app.route('/')
-def index():
-    glass_data = GlassData.query.all()
-    return render_template('index.html', glass_data=glass_data)
+    # Document converter setup
+    doc_converter = DocumentConverter(
+        format_options={
+            InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+        }
+    )
 
-@app.route('/add_glass_data', methods=['POST'])
-def add_glass_data():
-    data = request.get_json()
-    try:
-        # Log des données reçues
-        print(f"Données reçues: {data}")
+    # Conversion and processing
+    start_time = time.time()
+    conv_res = doc_converter.convert(input_doc_path)
 
-        # Créer l'entrée principale dans GlassData
-        new_entry = GlassData(
-            type_document=data.get('type'),
-            titre=data.get('titre'),
-            reference=data.get('reference'),
-            premier_auteur=data.get('premier_auteur'),
-            nombre_types_verres=data.get('nombre_types_verres')
-        )
-        db.session.add(new_entry)
-        db.session.commit()
+    # Ensure output directory exists
+    output_dir.mkdir(parents=True, exist_ok=True)
+    doc_filename = conv_res.input.file.stem
 
-        # Ajouter les types de verre
-        for verre in data.get('verres', []):
-            # Log des données de chaque type de verre
-            #print(f"Données du verre: {verre}")
+    # Create specific directory for markdown file inside scratch
+    md_output_dir = output_dir / f"{doc_filename}-md"
+    md_output_dir.mkdir(parents=True, exist_ok=True)
 
-            glass_type_entry = GlassType(
-                glass_data_id=new_entry.id,
-                type_verre=verre.get('type'),
-                sio2=verre.get('sio2'),
-                b2o3=verre.get('b2o3'),
-                na2o=verre.get('na2o'),
-                al2o3=verre.get('al2o3'),
-                cao=verre.get('cao'),  # Nouveau champ
-                zro2=verre.get('zro2'),  # Nouveau champ
-                ce2o3=verre.get('ce2o3'),  # Nouveau champ
-                lio2=verre.get('lio2'),  # Nouveau champ
-                fe2o3=verre.get('fe2o3'),  # Nouveau champ
-                zno=verre.get('zno'),  # Nouveau champ
-                p2o5=verre.get('p2o5'),  # Nouveau champ
-                mo3=verre.get('mo3'),  # Nouveau champ
-                tio2=verre.get('tio2'),  # Nouveau champ
-                mgo=verre.get('mgo'),  # Nouveau champ
-                fines=verre.get('fines'),
-                autres=verre.get('autres'),  # Nouveau champ
-                somme=verre.get('somme'),  # Nouveau champ
-                densite=verre.get('densite'),
-                homogeneite=verre.get('homogeneite'),
-                b_iv_pourcent=verre.get('b_iv_pourcent'),
-                irradie=verre.get('irradie'),
-                caracteristiques_irradie=verre.get('caracteristiques_irradie'),
-                temperature=verre.get('temperature'),
-                statique_dynamique=verre.get('statique_dynamique'),
-                plage_granulo=verre.get('plage_granulo'),
-                surface_specifique_geometrique=verre.get('surface_specifique_geometrique'),
-                surface_specifique_bet=verre.get('surface_specifique_bet'),
-                qualite_polissage=verre.get('qualite_polissage'),
-                masse_verre=verre.get('masse_verre'),
-                s_verre=verre.get('s_verre'),
-                v_solution=verre.get('v_solution'),
-                debit_solution=verre.get('debit_solution'),
-                ph_initial=verre.get('ph_initial'),
-                ph_initial_test=verre.get('ph_initial_test'),
-                composition_solution=verre.get('composition_solution'),
-                duree_experience=verre.get('duree_experience'),
-                ph_final_amb=verre.get('ph_final_amb'),
-                ph_final_test=verre.get('ph_final_test'),
-                normalisation_vitesse=verre.get('normalisation_vitesse'),
-                v0_si=verre.get('v0_si'),
-                r_carre_si=verre.get('r_carre_si'),
-                ordonnee_origine_si=verre.get('ordonnee_origine_si'),
-                v0_b=verre.get('v0_b'),
-                ordonnee_origine_b=verre.get('ordonnee_origine_b'),
-                v0_na=verre.get('v0_na'),
-                r_carre_na=verre.get('r_carre_na'),
-                ordonnee_origine_na=verre.get('ordonnee_origine_na'),
-                v0_dm=verre.get('v0_dm'),
-                congruence=verre.get('congruence')
-            )
-            db.session.add(glass_type_entry)
-        db.session.commit()
+    # Export plain Markdown from document
+    plain_md = conv_res.document.export_to_markdown()
+    plain_md_filename = md_output_dir / f"{doc_filename}-plain.md"
+    
+    # Save only the plain markdown without images
+    with plain_md_filename.open("w") as fp:
+        fp.write(plain_md)
 
-        return "Données sur le verre ajoutées avec succès !", 200
+    # Logging completion
+    end_time = time.time() - start_time
+    logging.info(f"Document converted in {end_time:.2f} seconds.")
+    logging.info(f"Markdown file saved at: {plain_md_filename}")
 
-    except Exception as e:
-        return f"Erreur : {str(e)}", 500
-
-@app.route('/delete_document_reference/<int:id>', methods=['POST'])
-def delete_document_reference(id):
-    glass_data = GlassData.query.get(id)
-    if glass_data:
-        # Delete related GlassType entries
-        GlassType.query.filter_by(glass_data_id=id).delete()
-        # Delete the GlassData entry
-        db.session.delete(glass_data)
-        db.session.commit()
-    return redirect(url_for('index'))
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return "No file part", 400
-    file = request.files['file']
-    if file.filename == '':
-        return "No selected file", 400
-    if file:
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(filepath)
-
-        # Call Docling script
-        docling_script_path = '/home/intra.cea.fr/ao280403/Bureau/Docling_Langflow_flask/DLF/docling_script.py'
-
-        if not os.path.exists(docling_script_path):
-            return f"Docling script not found at: {docling_script_path}", 500
-
-        process = subprocess.Popen(
-            ["python", docling_script_path, filepath],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-
-        # Read the output and send progress updates
-        total_pages = 0
-        for line in process.stdout:
-            logging.info(line.strip())
-            if "Page" in line and "/" in line:
-                parts = line.split(" ")
-                current_page = int(parts[1].split("/")[0])
-                total_pages = int(parts[1].split("/")[1])
-                percent_complete = (current_page / total_pages) * 100
-                socketio.emit('progress', {'percent_complete': percent_complete})
-            elif "Table" in line or "Picture" in line:
-                socketio.emit('progress', {'message': line.strip()})
-
-        process.wait()
-
-        # Construct the expected Markdown file path
-        doc_filename = os.path.splitext(os.path.basename(filepath))[0]
-        md_filepath = os.path.join('scratch', f"{doc_filename}-md", f"{doc_filename}-plain.md")
-
-        # Verify the Markdown file exists
-        if not os.path.exists(md_filepath):
-            return f"Markdown file not found at: {md_filepath}", 500
-
-        # Read the Markdown file
-        with open(md_filepath, 'r') as md_file:
-            md_content = md_file.read()
-
-        # Call Langflow API
-        response = requests.post(
-            "http://127.0.0.1:7861/api/v1/run/c71b7e6b-b61f-4d8a-8b0f-f8671ed704a0?stream=false",
-            json={
-                "input_value": md_content,
-                "output_type": "chat",
-                "input_type": "text",
-                "tweaks": {
-                    "Prompt-VZ995": {},
-                    "ParseData-JYdZN": {},
-                    "Prompt-3apHK": {},
-                    "GoogleGenerativeAIModel-SziqS": {},
-                    "GoogleGenerativeAIModel-P2MPA": {},
-                    "CombineText-jsJR5": {},
-                    "GoogleGenerativeAIModel-g991h": {},
-                    "Prompt-SnwGT": {},
-                    "Prompt-OgRUB": {},
-                    "Prompt-Ll1jc": {},
-                    "GoogleGenerativeAIModel-it9iU": {},
-                    "TextInput-7k53j": {},
-                    "Prompt-mFTst": {},
-                    "TextInput-d1Zlj": {},
-                    "GoogleGenerativeAIModel-Khxer": {},
-                    "GoogleGenerativeAIModel-mjEvn": {},
-                    "GoogleGenerativeAIModel-IXpZ3": {},
-                    "Prompt-hqKv2": {},
-                    "Prompt-awsxl": {},
-                    "Prompt-TWZ1Z": {},
-                    "CustomComponent-fHoBG": {},
-                    "File-xplij": {},
-                    "GoogleGenerativeAIModel-Yufik": {},
-                    "GoogleGenerativeAIModel-qB6ld": {}
-                }
-            }
-        )
-
-        # Return a JSON response to update the frontend
-        return jsonify({"message": "File processed successfully", "data": response.json()})
-
-@app.route('/download_excel', methods=['GET'])
-def download_excel():
-    glass_data = GlassData.query.all()
-    data = []
-    for entry in glass_data:
-        for glass_type in entry.glass_types:
-            data.append({
-                "Type": entry.type_document,
-                "Titre": entry.titre,
-                "Référence": entry.reference,
-                "Premier Auteur": entry.premier_auteur,
-                "Type de verre": glass_type.type_verre,
-                "SiO₂": glass_type.sio2,
-                "B₂O₃": glass_type.b2o3,
-                "Na₂O": glass_type.na2o,
-                "Al₂O₃": glass_type.al2o3,
-                "CaO": glass_type.cao,  # Nouveau champ
-                "ZrO₂": glass_type.zro2,  # Nouveau champ
-                "Ce₂O₃": glass_type.ce2o3,  # Nouveau champ
-                "Li₂O": glass_type.lio2,  # Nouveau champ
-                "Fe₂O₃": glass_type.fe2o3,  # Nouveau champ
-                "ZnO": glass_type.zno,  # Nouveau champ
-                "P₂O₅": glass_type.p2o5,  # Nouveau champ
-                "MoO₃": glass_type.mo3,  # Nouveau champ
-                "TiO₂": glass_type.tio2,  # Nouveau champ
-                "MgO": glass_type.mgo,  # Nouveau champ
-                "Fines": glass_type.fines,
-                "Autres": glass_type.autres,  # Nouveau champ
-                "Somme": glass_type.somme,  # Nouveau champ
-                "Densité": glass_type.densite,
-                "Homogénéité": glass_type.homogeneite,
-                "% B(IV)": glass_type.b_iv_pourcent,
-                "Irradié": glass_type.irradie,
-                "Caractéristiques si irradié": glass_type.caracteristiques_irradie,
-                "Température": glass_type.temperature,
-                "Statique/dynamique": glass_type.statique_dynamique,
-                "Plage granulo si poudre": glass_type.plage_granulo,
-                "Surface spécifique géométrique si poudre": glass_type.surface_specifique_geometrique,
-                "Surface spécifique BET si poudre": glass_type.surface_specifique_bet,
-                "Qualité polissage si monolithe": glass_type.qualite_polissage,
-                "Masse verre": glass_type.masse_verre,
-                "S(verre)": glass_type.s_verre,
-                "V(solution)": glass_type.v_solution,
-                "Débit solution": glass_type.debit_solution,
-                "pH initial (T amb)": glass_type.ph_initial,
-                "pH initial (T essai)": glass_type.ph_initial_test,
-                "Compo solution": glass_type.composition_solution,
-                "Durée expérience": glass_type.duree_experience,
-                "pH final (T amb)": glass_type.ph_final_amb,
-                "pH final (T essai)": glass_type.ph_final_test,
-                "Normalisation vitesse (Spm ou SBET)": glass_type.normalisation_vitesse,
-                "V₀(Si)": glass_type.v0_si,
-                "r²": glass_type.r_carre_si,
-                "Ordonnée origine": glass_type.ordonnee_origine_si,
-                "V₀(B)": glass_type.v0_b,
-                "Ordonnée origine": glass_type.ordonnee_origine_b,
-                "V₀(Na)": glass_type.v0_na,
-                "r²": glass_type.r_carre_na,
-                "Ordonnée origine": glass_type.ordonnee_origine_na,
-                "V₀(ΔM)": glass_type.v0_dm,
-                "Congruence": glass_type.congruence
-            })
-
-    df = pd.DataFrame(data)
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Glass Data')
-    output.seek(0)
-
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='glass_data.xlsx')
-
-@socketio.on('connect')
-def handle_connect():
-    emit('status', {'msg': 'Connecté'})
-
-if __name__ == '__main__':
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-    socketio.run(app, debug=True, port=5001)
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python docling_script.py <path_to_pdf>")
+        sys.exit(1)
+    main(sys.argv[1])
