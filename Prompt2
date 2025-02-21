@@ -1,6 +1,6 @@
 **Instructions :**
 
-Lisez le document ci-dessous et extrayez uniquement les informations suivantes. Formatez les réponses clairement pour chaque élément :
+Lisez le document ci-dessous et l'input donné par l'utilisateur et extrayez les informations suivantes. Formatez les réponses clairement pour chaque élément :
 
 **Document :**
 {Document}
@@ -13,7 +13,7 @@ Lisez le document ci-dessous et extrayez uniquement les informations suivantes. 
 2. Titre du document : [Titre]
 3. Référence : [Référence]
 4. Premier Auteur : [Nom complet]
-5. Nombre de types de verres : [Nombre total des types de verres mentionnés dans les tableaux]
+5. Nombre de types de verres : [Valeur ,Nombre total de types de verres mentionnés dans la liste fournie par l'utilisateur. Comptez le nombre de types de verres présents dans cette liste.]
 
 ---
 
@@ -23,8 +23,8 @@ Lisez le document ci-dessous et extrayez uniquement les informations suivantes. 
 2. Titre du document : [Titre]
 3. Référence : [Référence]
 4. Premier Auteur : [Premier Auteur]
-5. Nombre de types de verres : [Nombre]
+5. Nombre de types de verres : [Valeur]
 
 ---
 
-Si une information est indisponible, indiquez "Non disponible".
+Si une information est indisponible, indiquez "Non disponible". Pour le nombre de types de verres , il faut comptez le nombre de types de verres présents dans la liste donnée par l'utilsateur dans l'input.
