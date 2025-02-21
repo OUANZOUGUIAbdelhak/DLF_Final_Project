@@ -143,4 +143,4 @@ Pour chaque type de verre (Verre_type21 à Verre_type24), répétez les informat
 ...
 1205. Congruence(Verre_type24) : [Commentaire ou valeur numérique]
 
-Il faut absolument donner toutes les valeurs des 4 types de verres de 1006 à 1205, et il ne faut surtout pas ajouter de commentaire à la fin pour quoi que ce soit. Si une des informations est indisponible dans le document, indiquez "Non disponible".
+Il faut absolument donner toutes les valeurs des 4 types de verres de 1006 à 1205, et il ne faut surtout pas ajouter de commentaire à la fin pour quoi que ce soit. Si une des informations est indisponible dans le document, indiquez "Non disponible", et si tu ne trouve pas de valeur pour la composition des verres de SiO₂ à Autres je veux que tu une valeur zéro, et je veux pas que tu ajoute les unités dans toutes les valeurs que tu va extraire.
